@@ -7,7 +7,7 @@ import { CameraOperator } from '../core/CameraOperator';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
-import { FXAAShader  } from 'three/examples/jsm/shaders/FXAAShader';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 
 import { Detector } from '../../lib/utils/Detector';
 import { Stats } from '../../lib/utils/Stats';
@@ -32,8 +32,7 @@ import { Scenario } from './Scenario';
 import { Sky } from './Sky';
 import { Ocean } from './Ocean';
 
-export class World
-{
+export class World {
 	public renderer: THREE.WebGLRenderer;
 	public camera: THREE.PerspectiveCamera;
 	public composer: any;
@@ -66,13 +65,11 @@ export class World
 
 	private lastScenarioID: string;
 
-	constructor(worldScenePath?: any)
-	{
+	constructor(worldScenePath?: any) {
 		const scope = this;
 
 		// WebGL not supported
-		if (!Detector.webgl)
-		{
+		if (!Detector.webgl) {
 			Swal.fire({
 				icon: 'warning',
 				title: 'WebGL compatibility',
@@ -95,8 +92,7 @@ export class World
 		this.generateHTML();
 
 		// Auto window resize
-		function onWindowResize(): void
-		{
+		function onWindowResize(): void {
 			scope.camera.aspect = window.innerWidth / window.innerHeight;
 			scope.camera.updateProjectionMatrix();
 			scope.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -110,18 +106,18 @@ export class World
 		this.camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1010);
 
 		// Passes
-		let renderPass = new RenderPass( this.graphicsWorld, this.camera );
-		let fxaaPass = new ShaderPass( FXAAShader );
+		let renderPass = new RenderPass(this.graphicsWorld, this.camera);
+		let fxaaPass = new ShaderPass(FXAAShader);
 
 		// FXAA
 		let pixelRatio = this.renderer.getPixelRatio();
-		fxaaPass.material['uniforms'].resolution.value.x = 1 / ( window.innerWidth * pixelRatio );
-		fxaaPass.material['uniforms'].resolution.value.y = 1 / ( window.innerHeight * pixelRatio );
+		fxaaPass.material['uniforms'].resolution.value.x = 1 / (window.innerWidth * pixelRatio);
+		fxaaPass.material['uniforms'].resolution.value.y = 1 / (window.innerHeight * pixelRatio);
 
 		// Composer
-		this.composer = new EffectComposer( this.renderer );
-		this.composer.addPass( renderPass );
-		this.composer.addPass( fxaaPass );
+		this.composer = new EffectComposer(this.renderer);
+		this.composer.addPass(renderPass);
+		this.composer.addPass(fxaaPass);
 
 		// Physics
 		this.physicsWorld = new CANNON.World();
@@ -151,16 +147,14 @@ export class World
 		this.inputManager = new InputManager(this, this.renderer.domElement);
 		this.cameraOperator = new CameraOperator(this, this.camera, this.params.Mouse_Sensitivity);
 		this.sky = new Sky(this);
-		
+
 		// Load scene if path is supplied
-		if (worldScenePath !== undefined)
-		{
+		if (worldScenePath !== undefined) {
 			let loadingManager = new LoadingManager(this);
-			loadingManager.onFinishedCallback = () =>
-			{
+			loadingManager.onFinishedCallback = () => {
 				this.update(1, 1);
 				this.setTimeScale(1);
-	
+
 				Swal.fire({
 					title: 'Welcome to Sketchbook!',
 					text: 'Feel free to explore the world and interact with available vehicles. There are also various scenarios ready to launch from the right panel.',
@@ -172,14 +166,12 @@ export class World
 					}
 				});
 			};
-			loadingManager.loadGLTF(worldScenePath, (gltf) =>
-				{
-					this.loadScene(loadingManager, gltf);
-				}
+			loadingManager.loadGLTF(worldScenePath, (gltf) => {
+				this.loadScene(loadingManager, gltf);
+			}
 			);
 		}
-		else
-		{
+		else {
 			UIManager.setUserInterfaceVisible(true);
 			UIManager.setLoadingScreenVisible(false);
 			Swal.fire({
@@ -195,8 +187,7 @@ export class World
 
 	// Update
 	// Handles all logic updates.
-	public update(timeStep: number, unscaledTimeStep: number): void
-	{
+	public update(timeStep: number, unscaledTimeStep: number): void {
 		this.updatePhysics(timeStep);
 
 		// Update registred objects
@@ -211,21 +202,18 @@ export class World
 		if (this.params.Debug_Physics) this.cannonDebugRenderer.update();
 	}
 
-	public updatePhysics(timeStep: number): void
-	{
+	public updatePhysics(timeStep: number): void {
 		// Step the physics world
 		this.physicsWorld.step(this.physicsFrameTime, timeStep);
 
 		this.characters.forEach((char) => {
-			if (this.isOutOfBounds(char.characterCapsule.body.position))
-			{
+			if (this.isOutOfBounds(char.characterCapsule.body.position)) {
 				this.outOfBoundsRespawn(char.characterCapsule.body);
 			}
 		});
 
 		this.vehicles.forEach((vehicle) => {
-			if (this.isOutOfBounds(vehicle.rayCastVehicle.chassisBody.position))
-			{
+			if (this.isOutOfBounds(vehicle.rayCastVehicle.chassisBody.position)) {
 				let worldPos = new THREE.Vector3();
 				vehicle.spawnPoint.getWorldPosition(worldPos);
 				worldPos.y += 1;
@@ -234,18 +222,16 @@ export class World
 		});
 	}
 
-	public isOutOfBounds(position: CANNON.Vec3): boolean
-	{
+	public isOutOfBounds(position: CANNON.Vec3): boolean {
 		let inside = position.x > -211.882 && position.x < 211.882 &&
-					position.z > -169.098 && position.z < 153.232 &&
-					position.y > 0.107;
+			position.z > -169.098 && position.z < 153.232 &&
+			position.y > 0.107;
 		let belowSeaLevel = position.y < 14.989;
 
 		return !inside && belowSeaLevel;
 	}
 
-	public outOfBoundsRespawn(body: CANNON.Body, position?: CANNON.Vec3): void
-	{
+	public outOfBoundsRespawn(body: CANNON.Body, position?: CANNON.Vec3): void {
 		let newPos = position || new CANNON.Vec3(0, 16, 0);
 		let newQuat = new CANNON.Quaternion(0, 0, 0, 1);
 
@@ -261,19 +247,17 @@ export class World
 	 * Rendering loop.
 	 * Implements fps limiter and frame-skipping
 	 * Calls world's "update" function before rendering.
-	 * @param {World} world 
+	 * @param {World} world
 	 */
-	public render(world: World): void
-	{
+	public render(world: World): void {
 		this.requestDelta = this.clock.getDelta();
 
-		requestAnimationFrame(() =>
-		{
+		requestAnimationFrame(() => {
 			world.render(world);
 		});
 
 		// Getting timeStep
-		let unscaledTimeStep = (this.requestDelta + this.renderDelta + this.logicDelta) ;
+		let unscaledTimeStep = (this.requestDelta + this.renderDelta + this.logicDelta);
 		let timeStep = unscaledTimeStep * this.params.Time_Scale;
 		timeStep = Math.min(timeStep, 1 / 30);    // min 30 fps
 
@@ -300,61 +284,48 @@ export class World
 		this.renderDelta = this.clock.getDelta();
 	}
 
-	public setTimeScale(value: number): void
-	{
+	public setTimeScale(value: number): void {
 		this.params.Time_Scale = value;
 		this.timeScaleTarget = value;
 	}
 
-	public add(worldEntity: IWorldEntity): void
-	{
+	public add(worldEntity: IWorldEntity): void {
 		worldEntity.addToWorld(this);
 		this.registerUpdatable(worldEntity);
 	}
 
-	public registerUpdatable(registree: IUpdatable): void
-	{
+	public registerUpdatable(registree: IUpdatable): void {
 		this.updatables.push(registree);
 		this.updatables.sort((a, b) => (a.updateOrder > b.updateOrder) ? 1 : -1);
 	}
 
-	public remove(worldEntity: IWorldEntity): void
-	{
+	public remove(worldEntity: IWorldEntity): void {
 		worldEntity.removeFromWorld(this);
 		this.unregisterUpdatable(worldEntity);
 	}
 
-	public unregisterUpdatable(registree: IUpdatable): void
-	{
+	public unregisterUpdatable(registree: IUpdatable): void {
 		_.pull(this.updatables, registree);
 	}
 
-	public loadScene(loadingManager: LoadingManager, gltf: any): void
-	{
+	public loadScene(loadingManager: LoadingManager, gltf: any): void {
 		gltf.scene.traverse((child) => {
-			if (child.hasOwnProperty('userData'))
-			{
-				if (child.type === 'Mesh')
-				{
+			if (child.hasOwnProperty('userData')) {
+				if (child.type === 'Mesh') {
 					Utils.setupMeshProperties(child);
 					this.sky.csm.setupMaterial(child.material);
 
-					if (child.material.name === 'ocean')
-					{
+					if (child.material.name === 'ocean') {
 						this.registerUpdatable(new Ocean(child, this));
 					}
 				}
 
-				if (child.userData.hasOwnProperty('data'))
-				{
-					if (child.userData.data === 'physics')
-					{
-						if (child.userData.hasOwnProperty('type')) 
-						{
+				if (child.userData.hasOwnProperty('data')) {
+					if (child.userData.data === 'physics') {
+						if (child.userData.hasOwnProperty('type')) {
 							// Convex doesn't work! Stick to boxes!
-							if (child.userData.type === 'box')
-							{
-								let phys = new BoxCollider({size: new THREE.Vector3(child.scale.x, child.scale.y, child.scale.z)});
+							if (child.userData.type === 'box') {
+								let phys = new BoxCollider({ size: new THREE.Vector3(child.scale.x, child.scale.y, child.scale.z) });
 								phys.body.position.copy(Utils.cannonVector(child.position));
 								phys.body.quaternion.copy(Utils.cannonQuat(child.quaternion));
 								phys.body.computeAABB();
@@ -365,8 +336,7 @@ export class World
 
 								this.physicsWorld.addBody(phys.body);
 							}
-							else if (child.userData.type === 'trimesh')
-							{
+							else if (child.userData.type === 'trimesh') {
 								let phys = new TrimeshCollider(child, {});
 								this.physicsWorld.addBody(phys.body);
 							}
@@ -375,13 +345,11 @@ export class World
 						}
 					}
 
-					if (child.userData.data === 'path')
-					{
+					if (child.userData.data === 'path') {
 						this.paths.push(new Path(child));
 					}
 
-					if (child.userData.data === 'scenario')
-					{
+					if (child.userData.data === 'scenario') {
 						this.scenarios.push(new Scenario(child, this));
 					}
 				}
@@ -400,9 +368,8 @@ export class World
 		}
 		if (defaultScenarioID !== undefined) this.launchScenario(defaultScenarioID, loadingManager);
 	}
-	
-	public launchScenario(scenarioID: string, loadingManager?: LoadingManager): void
-	{
+
+	public launchScenario(scenarioID: string, loadingManager?: LoadingManager): void {
 		this.lastScenarioID = scenarioID;
 
 		this.clearEntities();
@@ -416,21 +383,17 @@ export class World
 		}
 	}
 
-	public restartScenario(): void
-	{
-		if (this.lastScenarioID !== undefined)
-		{
+	public restartScenario(): void {
+		if (this.lastScenarioID !== undefined) {
 			document.exitPointerLock();
 			this.launchScenario(this.lastScenarioID);
 		}
-		else
-		{
+		else {
 			console.warn('Can\'t restart scenario. Last scenarioID is undefined.');
 		}
 	}
 
-	public clearEntities(): void
-	{
+	public clearEntities(): void {
 		for (let i = 0; i < this.characters.length; i++) {
 			this.remove(this.characters[i]);
 			i--;
@@ -442,32 +405,27 @@ export class World
 		}
 	}
 
-	public scrollTheTimeScale(scrollAmount: number): void
-	{
+	public scrollTheTimeScale(scrollAmount: number): void {
 		// Changing time scale with scroll wheel
 		const timeScaleBottomLimit = 0.003;
 		const timeScaleChangeSpeed = 1.3;
-	
-		if (scrollAmount > 0)
-		{
+
+		if (scrollAmount > 0) {
 			this.timeScaleTarget /= timeScaleChangeSpeed;
 			if (this.timeScaleTarget < timeScaleBottomLimit) this.timeScaleTarget = 0;
 		}
-		else
-		{
+		else {
 			this.timeScaleTarget *= timeScaleChangeSpeed;
 			if (this.timeScaleTarget < timeScaleBottomLimit) this.timeScaleTarget = timeScaleBottomLimit;
 			this.timeScaleTarget = Math.min(this.timeScaleTarget, 1);
 		}
 	}
 
-	public updateControls(controls: any): void
-	{
+	public updateControls(controls: any): void {
 		let html = '';
 		html += '<h2 class="controls-title">Controls:</h2>';
 
-		controls.forEach((row) =>
-		{
+		controls.forEach((row) => {
 			html += '<div class="ctrl-row">';
 			row.keys.forEach((key) => {
 				if (key === '+' || key === 'and' || key === 'or' || key === '&') html += '&nbsp;' + key + '&nbsp;';
@@ -480,8 +438,7 @@ export class World
 		document.getElementById('controls').innerHTML = html;
 	}
 
-	private generateHTML(): void
-	{
+	private generateHTML(): void {
 		// Fonts
 		$('head').append('<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap" rel="stylesheet">');
 		$('head').append('<link href="https://fonts.googleapis.com/css2?family=Solway:wght@400;500;700&display=swap" rel="stylesheet">');
@@ -490,13 +447,13 @@ export class World
 		// Loader
 		$(`	<div id="loading-screen">
 				<div id="loading-screen-background"></div>
-				<h1 id="main-title" class="sb-font">Sketchbook 0.4</h1>
+				<h1 id="main-title" class="sb-font">频困生</h1>
 				<div class="cubeWrap">
 					<div class="cube">
 						<div class="faces1"></div>
-						<div class="faces2"></div>     
-					</div> 
-				</div> 
+						<div class="faces2"></div>
+					</div>
+				</div>
 				<div id="loading-text">Loading...</div>
 			</div>
 		`).appendTo('body');
@@ -525,8 +482,7 @@ export class World
 		this.renderer.domElement.id = 'canvas';
 	}
 
-	private createParamsGUI(scope: World): void
-	{
+	private createParamsGUI(scope: World): void {
 		this.params = {
 			Pointer_Lock: true,
 			Mouse_Sensitivity: 0.3,
@@ -548,18 +504,15 @@ export class World
 		// World
 		let worldFolder = gui.addFolder('World');
 		worldFolder.add(this.params, 'Time_Scale', 0, 1).listen()
-			.onChange((value) =>
-			{
+			.onChange((value) => {
 				scope.timeScaleTarget = value;
 			});
 		worldFolder.add(this.params, 'Sun_Elevation', 0, 180).listen()
-			.onChange((value) =>
-			{
+			.onChange((value) => {
 				scope.sky.phi = value;
 			});
 		worldFolder.add(this.params, 'Sun_Rotation', 0, 360).listen()
-			.onChange((value) =>
-			{
+			.onChange((value) => {
 				scope.sky.theta = value;
 			});
 
@@ -567,52 +520,42 @@ export class World
 		let settingsFolder = gui.addFolder('Settings');
 		settingsFolder.add(this.params, 'FXAA');
 		settingsFolder.add(this.params, 'Shadows')
-			.onChange((enabled) =>
-			{
-				if (enabled)
-				{
+			.onChange((enabled) => {
+				if (enabled) {
 					this.sky.csm.lights.forEach((light) => {
 						light.castShadow = true;
 					});
 				}
-				else
-				{
+				else {
 					this.sky.csm.lights.forEach((light) => {
 						light.castShadow = false;
 					});
 				}
 			});
 		settingsFolder.add(this.params, 'Pointer_Lock')
-			.onChange((enabled) =>
-			{
+			.onChange((enabled) => {
 				scope.inputManager.setPointerLock(enabled);
 			});
 		settingsFolder.add(this.params, 'Mouse_Sensitivity', 0, 1)
-			.onChange((value) =>
-			{
+			.onChange((value) => {
 				scope.cameraOperator.setSensitivity(value, value * 0.8);
 			});
 		settingsFolder.add(this.params, 'Debug_Physics')
-			.onChange((enabled) =>
-			{
-				if (enabled)
-				{
-					this.cannonDebugRenderer = new CannonDebugRenderer( this.graphicsWorld, this.physicsWorld );
+			.onChange((enabled) => {
+				if (enabled) {
+					this.cannonDebugRenderer = new CannonDebugRenderer(this.graphicsWorld, this.physicsWorld);
 				}
-				else
-				{
+				else {
 					this.cannonDebugRenderer.clearMeshes();
 					this.cannonDebugRenderer = undefined;
 				}
 
-				scope.characters.forEach((char) =>
-				{
+				scope.characters.forEach((char) => {
 					char.raycastBox.visible = enabled;
 				});
 			});
 		settingsFolder.add(this.params, 'Debug_FPS')
-			.onChange((enabled) =>
-			{
+			.onChange((enabled) => {
 				UIManager.setFPSVisible(enabled);
 			});
 

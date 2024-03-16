@@ -122,8 +122,11 @@ export class World {
 		// Physics
 		this.physicsWorld = new CANNON.World();
 		this.physicsWorld.gravity.set(0, -9.81, 0);
+		// 修改碰撞算法，适用于大场景用于提升碰撞计算性能，应用了扫描和剪枝的算法
 		this.physicsWorld.broadphase = new CANNON.SAPBroadphase(this.physicsWorld);
+		// 碰撞解算器迭代次数，越多越精确，相应的性能也会随之下降
 		this.physicsWorld.solver.iterations = 10;
+		// 当刚体移动缓慢允许睡眠减少计算，用来提升性能
 		this.physicsWorld.allowSleep = true;
 
 		this.parallelPairs = [];
